@@ -38,11 +38,11 @@ try:
     _redis = redis.from_url(REDIS_URL, decode_responses=True)
     _redis.ping()
     USE_REDIS = True
-    print("✅ Connected to Redis")
+    print("Connected to Redis")
 except Exception:
     USE_REDIS = False
     _memory_store: dict = {}
-    print("⚠️  Redis not available — using in-memory store (not scalable!)")
+    print("Redis not available - using in-memory store (not scalable!)")
 
 
 logging.basicConfig(level=logging.INFO)
@@ -93,7 +93,7 @@ def append_to_history(session_id: str, role: str, content: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"Starting instance {INSTANCE_ID}")
-    logger.info(f"Storage: {'Redis ✅' if USE_REDIS else 'In-memory ⚠️'}")
+    logger.info(f"Storage: {'Redis' if USE_REDIS else 'In-memory'}")
     yield
     logger.info(f"Instance {INSTANCE_ID} shutting down")
 
@@ -147,11 +147,13 @@ async def chat(body: ChatRequest):
     # Lưu response vào history
     append_to_history(session_id, "assistant", answer)
 
+    user_turn = len([m for m in history if m["role"] == "user"])
+
     return {
         "session_id": session_id,
         "question": body.question,
         "answer": answer,
-        "turn": len([m for m in history if m["role"] == "user"]) + 1,
+        "turn": user_turn,
         "served_by": INSTANCE_ID,  # ← thấy rõ bất kỳ instance nào cũng serve được
         "storage": "redis" if USE_REDIS else "in-memory",
     }
@@ -217,4 +219,4 @@ def ready():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
