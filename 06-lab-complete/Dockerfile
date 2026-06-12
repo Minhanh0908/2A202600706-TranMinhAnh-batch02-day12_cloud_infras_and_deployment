@@ -10,7 +10,7 @@ WORKDIR /build
 RUN apt-get update && apt-get install -y gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY 06-lab-complete/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 
@@ -26,7 +26,7 @@ WORKDIR /app
 COPY --from=builder /root/.local /home/agent/.local
 
 # Copy application
-COPY app/ ./app/
+COPY 06-lab-complete/app/ ./app/
 COPY utils/ ./utils/
 
 RUN chown -R agent:agent /app
